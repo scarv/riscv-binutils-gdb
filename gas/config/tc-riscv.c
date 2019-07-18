@@ -567,6 +567,11 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
   while (*p)
     switch (c = *p++)
       {
+      case 'X': /* XCrypto */
+    switch (c = *p++) {
+      case 'p': USE_BITS (OP_MASK_PW, OP_SH_PW)  ; break;
+      case 'M': USE_BITS (OP_MASK_RDM, OP_SH_RDM); break;
+    }
       case 'C': /* RVC */
 	switch (c = *p++)
 	  {
@@ -1433,6 +1438,41 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      error = NULL;
 	      goto out;
 
+        case 'X': /* XCrypto */
+          switch (*++args) 
+        {
+          case 'p': /* XCrypto - pack width */
+            if(s[0] == 'h') {   /* Pack width: halfwords */
+                INSERT_OPERAND(PW, *ip, 3);
+            } else if(s[0] == 'b') {    /* Pack width: bytes */
+                INSERT_OPERAND(PW, *ip, 2);
+            } else if(s[0] == 'n') {    /* Pack width: nibbles */
+                INSERT_OPERAND(PW, *ip, 1);
+            } else if(s[0] == 'c') {    /* Pack width: crumbs */
+                INSERT_OPERAND(PW, *ip, 0);
+            } else {
+                as_bad(_("XCrypto ISE: Bad pack width specifier. Should be {h,b,n,c}. Got %c\n"),s[0]);
+            }
+            /* Increment s to move to next token. */
+            while(s[0] != ',') {s++;}
+            s++;
+            break;
+          case 'M':
+            my_getExpression (imm_expr, s);
+            check_absolute_expr (ip, imm_expr, FALSE);
+            if((unsigned long)imm_expr->X_add_number > 15) {
+                as_bad(_("XCrypto ISE: Bad register specifier. Should be {0<=x<=15}."));
+            }
+            INSERT_OPERAND(RDM, *ip, imm_expr -> X_add_number);
+            /* Increment s to move to next token. */
+            while(s[0] != ',') {s++;}
+            s++;
+            break;
+          default:
+            as_bad(_("XCrypto ISE: Unknown argument specifier: %c\n"),*args);
+            break;
+        }
+          continue;
 	    case 'C': /* RVC */
 	      switch (*++args)
 		{
