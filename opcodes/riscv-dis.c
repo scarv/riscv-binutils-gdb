@@ -121,8 +121,8 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
   fprintf_ftype print = info->fprintf_func;
   char c;
   int aux;
-  int lutval;
-  int lutlen;
+  int lutval=0;
+  int lutlen=0;
   int i;
   char packwidth = 0xFF;
 
