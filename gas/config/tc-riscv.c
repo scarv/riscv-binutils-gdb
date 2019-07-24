@@ -444,6 +444,7 @@ enum reg_class
   RCLASS_GPR,
   RCLASS_FPR,
   RCLASS_CSR,
+  RCLASS_CPR,
   RCLASS_MAX
 };
 

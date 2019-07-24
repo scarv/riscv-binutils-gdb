@@ -393,6 +393,7 @@ static const char * const riscv_pred_succ[16] =
 #define X_T3 28
 
 #define NGPR 32
+#define NCPR 16
 #define NFPR 32
 
 /* These fake label defines are use by both the assembler, and

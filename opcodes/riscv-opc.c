@@ -203,7 +203,6 @@ match_srxi_as_c_srxi (const struct riscv_opcode *op, insn_t insn)
 const struct riscv_opcode riscv_opcodes[] =
 {
 /* name,     xlen, isa,   operands, match, mask, match_func, pinfo.  */
-{"unimp",       0, {"C", 0},   "",  0, 0xffffU,  match_opcode, INSN_ALIAS },
 // ----- XCrypto ISE BEGIN -----
 {"xc.xcr2gpr",       0, {"x",0}, "d,Xs",                MATCH_XCR2GPR, MASK_XCR2GPR, match_opcode, 0},
 {"xc.gpr2xcr",       0, {"x",0}, "XD,s",                MATCH_GPR2XCR, MASK_GPR2XCR, match_opcode, 0},
