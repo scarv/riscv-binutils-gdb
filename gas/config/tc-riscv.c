@@ -571,7 +571,8 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
     switch (c = *p++) {
       case 'p': USE_BITS (OP_MASK_PW, OP_SH_PW)  ; break;
       case 'M': USE_BITS (OP_MASK_RDM, OP_SH_RDM); break;
-    }
+      }
+      break;
       case 'C': /* RVC */
 	switch (c = *p++)
 	  {
