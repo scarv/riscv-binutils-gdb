@@ -119,6 +119,12 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
   int rs1 = (l >> OP_SH_RS1) & OP_MASK_RS1;
   int rd = (l >> OP_SH_RD) & OP_MASK_RD;
   fprintf_ftype print = info->fprintf_func;
+  char c;
+  int aux;
+  int lutval;
+  int lutlen;
+  int i;
+  char packwidth = 0xFF;
 
   if (*d != '\0')
     print (info->stream, "\t");
@@ -127,6 +133,99 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
     {
       switch (*d)
 	{
+     case 'X':
+       switch (c = *++d){
+         case 'w': print(info->stream, "%d", (int)EXTRACT_X_B0(l)); break;
+         case 'x': print(info->stream, "%d", (int)EXTRACT_X_B1(l)); break;
+         case 'y': print(info->stream, "%d", (int)EXTRACT_X_B2(l)); break;
+         case 'z': print(info->stream, "%d", (int)EXTRACT_X_B3(l)); break;
+         case 'p':       /* pack width */
+            aux = EXTRACT_X_PW(l);
+            // Extract and print friendly pack width letter.
+            switch(aux) {
+                case 1 : print(info->stream,"c"); packwidth = 'c'; break;
+                case 2 : print(info->stream,"n"); packwidth = 'n'; break;
+                case 3 : print(info->stream,"b"); packwidth = 'b'; break;
+                case 4 : print(info->stream,"h"); packwidth = 'h'; break;
+                case 5 : print(info->stream,"w"); packwidth = 'w'; break;
+                default: print(info->stream,"?"); packwidth = '?'; break;
+            }
+            break;
+         case 'a': print(info->stream, "%d", (int)EXTRACT_X_CA(l)); break;
+         case 'b': print(info->stream, "%d", (int)EXTRACT_X_CB(l)); break;
+         case 'c': print(info->stream, "%d", (int)EXTRACT_X_CC(l)); break;
+         case 'd': print(info->stream, "%d", (int)EXTRACT_X_CD(l)); break;
+         case 'L': 
+            if( (l&MASK_BMV) == MATCH_BMV ) {
+                print(info->stream, "%d", ((int)EXTRACT_X_CL(l))  );
+            } else {
+                print(info->stream, "%d", ((int)EXTRACT_X_CL(l))+1);
+            }
+            break;
+         case 'r': print(info->stream, "%d", (int)EXTRACT_X_CMSHAMT(l)); break;
+         case 'D': print(info->stream, "c%d",(int)EXTRACT_X_CRD(l)); break;
+         case 'M': /* crdm */
+            aux = (int)EXTRACT_X_CRDM(l) << 1;
+            print(info -> stream, "c%d,c%d", aux, aux | 1);
+            break;
+         case 's': print(info->stream, "c%d",(int)EXTRACT_X_CRS1(l)); break;
+         case 't': print(info->stream, "c%d",(int)EXTRACT_X_CRS2(l)); break;
+         case 'S': print(info->stream, "c%d",(int)EXTRACT_X_CRS3(l)); break;
+         case 'k': print(info->stream, "%d", ((int)EXTRACT_X_CS(l))); break;
+         case 'R':
+            if(packwidth == 'w') {
+                int shamt = EXTRACT_X_CSHAMT(l) | (((int)EXTRACT_X_CA(l)) << 4);
+                print(info->stream, "%d", shamt);
+            } else {
+
+                print(info->stream, "%d", (int)EXTRACT_X_CSHAMT(l));
+
+            }
+            break;
+         case 'h': print(info->stream, "%d", (int)EXTRACT_X_CC(l));break;
+         case 'B': print(info->stream, "%d", (int)EXTRACT_X_CD(l));break;
+         case 'l': print(info->stream, "%d", (int)EXTRACT_X_IMM11(l));break;
+         case 'm':       /* imm11hi, imm11lo */
+            print(info->stream, "<IMM>");
+            break;
+         case 'n':      /* imm11lo */
+            print(info->stream, "<IMM>");
+            break;
+         case '5':       /* imm11 imm5 */
+            print(info->stream, "<IMM>");
+            break;
+         case '4':
+         case '8':
+
+            if(*d == '4') {
+                lutval = (int)EXTRACT_X_LUT4(l);
+                lutlen = 4;
+            } else if(*d == '8') {
+                lutval = (int)EXTRACT_X_LUT8(l);
+                lutlen = 8;
+            }
+
+            print(info -> stream, "0b");
+            for(i = lutlen-1; i >= 0; i --) {
+                print(info->stream, "%d", (lutval >> i) &0x1);
+            }
+            break;
+	
+         case ',':
+	     case '(':
+	     case ')':
+	     case '[':
+	     case ']':
+	        print (info->stream, "%c", *d);
+	        break;
+
+         default:
+            print(info -> stream, "Unknown XCrypto operand type `X%c'",c);
+            return;
+        }
+
+        break;
+
 	case 'C': /* RVC */
 	  switch (*++d)
 	    {

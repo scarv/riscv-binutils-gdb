@@ -196,6 +196,131 @@ static const char * const riscv_pred_succ[16] =
 #define RISCV_BRANCH_ALIGN (1 << RISCV_BRANCH_ALIGN_BITS)
 #define RISCV_BRANCH_REACH (RISCV_IMM_REACH * RISCV_BRANCH_ALIGN)
 
+// ----- XCrypto ISE BEGIN -----
+#define ENCODE_X_B0(X)  ((X &  OP_MASK_XB0) << OP_SH_XB0)
+#define ENCODE_X_B1(X)  ((X &  OP_MASK_XB1) << OP_SH_XB1)
+#define ENCODE_X_B2(X)  ((X &  OP_MASK_XB2) << OP_SH_XB2)
+#define ENCODE_X_B3(X)  ((X &  OP_MASK_XB3) << OP_SH_XB3)
+#define ENCODE_X_CA(X)  ((X &  OP_MASK_XCA) << OP_SH_XCA)
+#define ENCODE_X_CB(X)  ((X &  OP_MASK_XCB) << OP_SH_XCB)
+#define ENCODE_X_CC(X)  ((X &  OP_MASK_XCC) << OP_SH_XCC)
+#define ENCODE_X_CD(X)  ((X &  OP_MASK_XCD) << OP_SH_XCD)
+#define ENCODE_X_CL(X)  ((X &  OP_MASK_XCL) << OP_SH_XCL)
+#define ENCODE_X_CMSHAMT(X)  ((X &  OP_MASK_XCMSHAMT) << OP_SH_XCMSHAMT)
+#define ENCODE_X_CRD(X)  ((X &  OP_MASK_XCRD) << OP_SH_XCRD)
+#define ENCODE_X_CRDM(X)  ((X &  OP_MASK_XCRDM) << OP_SH_XCRDM)
+#define ENCODE_X_CRS1(X)  ((X &  OP_MASK_XCRS1) << OP_SH_XCRS1)
+#define ENCODE_X_CRS2(X)  ((X &  OP_MASK_XCRS2) << OP_SH_XCRS2)
+#define ENCODE_X_CRS3(X)  ((X &  OP_MASK_XCRS3) << OP_SH_XCRS3)
+#define ENCODE_X_CS(X)  ((X &  OP_MASK_XCS) << OP_SH_XCS)
+#define ENCODE_X_CSHAMT(X)  ((X &  OP_MASK_XCSHAMT) << OP_SH_XCSHAMT)
+#define ENCODE_X_PW(X)  ((X &  OP_MASK_XPW) << OP_SH_XPW)
+#define ENCODE_X_IMM11(X)  ((X &  OP_MASK_XIMM11) << OP_SH_XIMM11)
+#define ENCODE_X_IMM11HI(X)  ((X &  OP_MASK_XIMM11HI) << OP_SH_XIMM11HI)
+#define ENCODE_X_IMM11LO(X)  ((X &  OP_MASK_XIMM11LO) << OP_SH_XIMM11LO)
+#define ENCODE_X_IMM5(X)  ((X &  OP_MASK_XIMM5) << OP_SH_XIMM5)
+#define ENCODE_X_LUT4(X)  ((X &  OP_MASK_XLUT4) << OP_SH_XLUT4)
+#define ENCODE_X_LUT8(X)  ((X &  OP_MASK_XLUT8) << OP_SH_XLUT8)
+#define ENCODE_X_RTAMT(X)  ((X &  OP_MASK_XRTAMT) << OP_SH_XRTAMT)
+#define EXTRACT_X_B0(X) ((X >> OP_SH_XB0)  & OP_MASK_XB0)
+#define EXTRACT_X_B1(X) ((X >> OP_SH_XB1)  & OP_MASK_XB1)
+#define EXTRACT_X_B2(X) ((X >> OP_SH_XB2)  & OP_MASK_XB2)
+#define EXTRACT_X_B3(X) ((X >> OP_SH_XB3)  & OP_MASK_XB3)
+#define EXTRACT_X_CA(X) ((X >> OP_SH_XCA)  & OP_MASK_XCA)
+#define EXTRACT_X_CB(X) ((X >> OP_SH_XCB)  & OP_MASK_XCB)
+#define EXTRACT_X_CC(X) ((X >> OP_SH_XCC)  & OP_MASK_XCC)
+#define EXTRACT_X_CD(X) ((X >> OP_SH_XCD)  & OP_MASK_XCD)
+#define EXTRACT_X_CL(X) ((X >> OP_SH_XCL)  & OP_MASK_XCL)
+#define EXTRACT_X_CMSHAMT(X) ((X >> OP_SH_XCMSHAMT)  & OP_MASK_XCMSHAMT)
+#define EXTRACT_X_CRD(X) ((X >> OP_SH_XCRD)  & OP_MASK_XCRD)
+#define EXTRACT_X_CRDM(X) ((X >> OP_SH_XCRDM)  & OP_MASK_XCRDM)
+#define EXTRACT_X_CRS1(X) ((X >> OP_SH_XCRS1)  & OP_MASK_XCRS1)
+#define EXTRACT_X_CRS2(X) ((X >> OP_SH_XCRS2)  & OP_MASK_XCRS2)
+#define EXTRACT_X_CRS3(X) ((X >> OP_SH_XCRS3)  & OP_MASK_XCRS3)
+#define EXTRACT_X_CS(X) ((X >> OP_SH_XCS)  & OP_MASK_XCS)
+#define EXTRACT_X_CSHAMT(X) ((X >> OP_SH_XCSHAMT)  & OP_MASK_XCSHAMT)
+#define EXTRACT_X_PW(X) ((X >> OP_SH_XPW)  & OP_MASK_XPW)
+#define EXTRACT_X_IMM11(X) ((X >> OP_SH_XIMM11)  & OP_MASK_XIMM11)
+#define EXTRACT_X_IMM11HI(X) ((X >> OP_SH_XIMM11HI)  & OP_MASK_XIMM11HI)
+#define EXTRACT_X_IMM11LO(X) ((X >> OP_SH_XIMM11LO)  & OP_MASK_XIMM11LO)
+#define EXTRACT_X_IMM5(X) ((X >> OP_SH_XIMM5)  & OP_MASK_XIMM5)
+#define EXTRACT_X_LUT4(X) ((X >> OP_SH_XLUT4)  & OP_MASK_XLUT4)
+#define EXTRACT_X_LUT8(X) ((X >> OP_SH_XLUT8)  & OP_MASK_XLUT8)
+#define EXTRACT_X_RTAMT(X) ((X >> OP_SH_XRTAMT)  & OP_MASK_XRTAMT)
+#define OP_MASK_XB0 0b11
+#define OP_MASK_XB1 0b11
+#define OP_MASK_XB2 0b11
+#define OP_MASK_XB3 0b11
+#define OP_MASK_XCA 0b1
+#define OP_MASK_XCB 0b1
+#define OP_MASK_XCC 0b1
+#define OP_MASK_XCD 0b1
+#define OP_MASK_XCL 0b11111
+#define OP_MASK_XCMSHAMT 0b111111
+#define OP_MASK_XCRD 0b1111
+#define OP_MASK_XCRDM 0b111
+#define OP_MASK_XCRS1 0b1111
+#define OP_MASK_XCRS2 0b1111
+#define OP_MASK_XCRS3 0b1111
+#define OP_MASK_XCS 0b11111
+#define OP_MASK_XCSHAMT 0b11111
+#define OP_MASK_XPW     0b111
+#define OP_MASK_XIMM11 0b11111111111
+#define OP_MASK_XIMM11HI 0b1111111
+#define OP_MASK_XIMM11LO 0b1111
+#define OP_MASK_XIMM5 0b11111
+#define OP_MASK_XLUT4 0b1111
+#define OP_MASK_XLUT8 0b11111111
+#define OP_SH_XB0 30
+#define OP_SH_XB1 28
+#define OP_SH_XB2 26
+#define OP_SH_XB3 24
+#define OP_SH_XCA 24
+#define OP_SH_XCB 19
+#define OP_SH_XCC 11
+#define OP_SH_XCD 20
+#define OP_SH_XCL 22
+#define OP_SH_XCMSHAMT 24
+#define OP_SH_XCRD 7
+#define OP_SH_XCRDM 7
+#define OP_SH_XCRS1 15
+#define OP_SH_XCRS2 20
+#define OP_SH_XCRS3 24
+#define OP_SH_XCS 27
+#define OP_SH_XCSHAMT 20
+#define OP_SH_XPW     29
+#define OP_SH_XIMM11 21
+#define OP_SH_XIMM11HI 25
+#define OP_SH_XIMM11LO 7
+#define OP_SH_XIMM5 15
+#define OP_SH_XLUT4 25
+#define OP_SH_XLUT8 24
+#define VALIDATE_X_B0(X) ((ENCODE_X_B0(X)) == (EXTRACT_X_B0(X)))
+#define VALIDATE_X_B1(X) ((ENCODE_X_B1(X)) == (EXTRACT_X_B1(X)))
+#define VALIDATE_X_B2(X) ((ENCODE_X_B2(X)) == (EXTRACT_X_B2(X)))
+#define VALIDATE_X_B3(X) ((ENCODE_X_B3(X)) == (EXTRACT_X_B3(X)))
+#define VALIDATE_X_CA(X) ((ENCODE_X_CA(X)) == (EXTRACT_X_CA(X)))
+#define VALIDATE_X_CB(X) ((ENCODE_X_CB(X)) == (EXTRACT_X_CB(X)))
+#define VALIDATE_X_CC(X) ((ENCODE_X_CC(X)) == (EXTRACT_X_CC(X)))
+#define VALIDATE_X_CD(X) ((ENCODE_X_CD(X)) == (EXTRACT_X_CD(X)))
+#define VALIDATE_X_CL(X) ((ENCODE_X_CL(X)) == (EXTRACT_X_CL(X)))
+#define VALIDATE_X_CMSHAMT(X) ((ENCODE_X_CMSHAMT(X)) == (EXTRACT_X_CMSHAMT(X)))
+#define VALIDATE_X_CRD(X) ((ENCODE_X_CRD(X)) == (EXTRACT_X_CRD(X)))
+#define VALIDATE_X_CRDM(X) ((ENCODE_X_CRDM(X)) == (EXTRACT_X_CRDM(X)))
+#define VALIDATE_X_CRS1(X) ((ENCODE_X_CRS1(X)) == (EXTRACT_X_CRS1(X)))
+#define VALIDATE_X_CRS2(X) ((ENCODE_X_CRS2(X)) == (EXTRACT_X_CRS2(X)))
+#define VALIDATE_X_CRS3(X) ((ENCODE_X_CRS3(X)) == (EXTRACT_X_CRS3(X)))
+#define VALIDATE_X_CS(X) ((ENCODE_X_CS(X)) == (EXTRACT_X_CS(X)))
+#define VALIDATE_X_CSHAMT(X) ((ENCODE_X_CSHAMT(X)) == (EXTRACT_X_CSHAMT(X)))
+#define VALIDATE_X_PW(X) ((ENCODE_X_PW(X)) == (EXTRACT_X_PW(X)))
+#define VALIDATE_X_IMM11(X) ((ENCODE_X_IMM11(X)) == (EXTRACT_X_IMM11(X)))
+#define VALIDATE_X_IMM11HI(X) ((ENCODE_X_IMM11HI(X)) == (EXTRACT_X_IMM11HI(X)))
+#define VALIDATE_X_IMM11LO(X) ((ENCODE_X_IMM11LO(X)) == (EXTRACT_X_IMM11LO(X)))
+#define VALIDATE_X_IMM5(X) ((ENCODE_X_IMM5(X)) == (EXTRACT_X_IMM5(X)))
+#define VALIDATE_X_LUT4(X) ((ENCODE_X_LUT4(X)) == (EXTRACT_X_LUT4(X)))
+#define VALIDATE_X_LUT8(X) ((ENCODE_X_LUT8(X)) == (EXTRACT_X_LUT8(X)))
+// ----- XCrypto ISE END -------
+
 /* RV fields.  */
 
 #define OP_MASK_OP		0x7f
@@ -400,6 +525,7 @@ extern const char * const riscv_gpr_names_numeric[NGPR];
 extern const char * const riscv_gpr_names_abi[NGPR];
 extern const char * const riscv_fpr_names_numeric[NFPR];
 extern const char * const riscv_fpr_names_abi[NFPR];
+extern const char * const riscv_cpr_names_numeric[NCPR];
 
 extern const struct riscv_opcode riscv_opcodes[];
 extern const struct riscv_opcode riscv_insn_types[];

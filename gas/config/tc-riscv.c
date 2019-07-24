@@ -563,10 +563,57 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       return FALSE;
     }
 
+// Used by Crypto ISE to eat arg specifier and argument strings as we
+// assemble each token.
+//#define EAT_ARG_TOKENS  ;
+#define EAT_ARG_TOKENS while(*s != ',' && *s != '\0'){s++;} \
+                       while(*args != ',' && *args != '\0'){args++;} \
+                       if(*s != '\0')s++;  \
+                       if(*args == '\0') args --;
+
 #define USE_BITS(mask,shift)	(used_bits |= ((insn_t)(mask) << (shift)))
   while (*p)
     switch (c = *p++)
       {
+// ----- XCrypto ISE BEGIN -----
+case 'X':
+  switch (c = *p++){
+    case 'w': used_bits |= ENCODE_X_B0(-1U) ;break;/* b0 */
+    case 'x': used_bits |= ENCODE_X_B1(-1U) ;break;/* b1 */
+    case 'y': used_bits |= ENCODE_X_B2(-1U) ;break;/* b2 */
+    case 'z': used_bits |= ENCODE_X_B3(-1U) ;break;/* b3 */
+    case 'p': used_bits |= ENCODE_X_PW(-1U) ;break;/* pw */
+    case 'a': used_bits |= ENCODE_X_CA(-1U) ;break;/* ca */
+    case 'b': used_bits |= ENCODE_X_CB(-1U) ;break;/* cb */
+    case 'c': used_bits |= ENCODE_X_CC(-1U) ;break;/* cc */
+    case 'd': used_bits |= ENCODE_X_CD(-1U) ;break;/* cd */
+    case 'L': used_bits |= ENCODE_X_CL(-1U) ;break;/* cl */
+    case 'r': used_bits |= ENCODE_X_CMSHAMT(-1U) ;break;/* cmshamt */
+    case 'D': used_bits |= ENCODE_X_CRD(-1U) ;break;/* crd */
+    case 'M': used_bits |= ENCODE_X_CRDM(-1U) ;break;/* crdm */
+    case 's': used_bits |= ENCODE_X_CRS1(-1U) ;break;/* crs1 */
+    case 't': used_bits |= ENCODE_X_CRS2(-1U) ;break;/* crs2 */
+    case 'S': used_bits |= ENCODE_X_CRS3(-1U) ;break;/* crs3 */
+    case 'k': used_bits |= ENCODE_X_CS(-1U) ;break;/* cs */
+    case 'R': used_bits |= ENCODE_X_CSHAMT(-1U) ;break;/* cshamt */
+    case 'h': used_bits |= ENCODE_X_CC(-1U) ;break;/* halfword specifier */
+    case 'B': used_bits |= ENCODE_X_CA(-1U) ;break;/* byte-in-halfword specifier (stores) */
+    case 'l': used_bits |= ENCODE_X_IMM11(-1U) ;break;/* imm11 */
+    case 'm': used_bits |= ENCODE_X_IMM11HI(-1U) ;      /* imm11hi */
+              used_bits |= ENCODE_X_IMM11LO(-1U) ;break;/* imm11lo */
+    case 'n': used_bits |= ENCODE_X_IMM11LO(-1U) ;break;/* imm11lo */
+    case '5': used_bits |= ENCODE_X_IMM11(-1U)       ;/* imm11*/
+              used_bits |= ENCODE_X_IMM5(-1U) ;break;/* imm5 */
+    case '4': used_bits |= ENCODE_X_LUT4(-1U) ;break;/* lut4 */
+    case '8': used_bits |= ENCODE_X_LUT8(-1U) ;break;/* lut8 */
+
+    default:
+    as_bad (_("internal: bad RISC-V Crypto opcode (unknown operand type `X%c'): %s %s"),
+    c, opc->name, opc->args);
+return FALSE;
+   }
+   break;
+// ----- XCrypto ISE END -------
       case 'C': /* RVC */
 	switch (c = *p++)
 	  {
@@ -763,8 +810,8 @@ md_begin (void)
   hash_reg_names (RCLASS_FPR, riscv_fpr_names_numeric, NFPR);
   hash_reg_names (RCLASS_FPR, riscv_fpr_names_abi, NFPR);
 
-  /* Add "fp" as an alias for "s0".  */
-  hash_reg_name (RCLASS_GPR, "fp", 8);
+  /* Hash XCrypto registers */
+  hash_reg_names (RCLASS_CPR, riscv_cpr_names_numeric, NCPR);
 
   opcode_names_hash = hash_new ();
   init_opcode_names_hash ();
@@ -1376,10 +1423,14 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   struct riscv_opcode *insn;
   char *argsStart;
   unsigned int regno;
+  unsigned int regno2;
   char save_c = 0;
   int argnum;
   const struct percent_op_match *p;
   const char *error = "unrecognized opcode";
+  char packwidth = 0xFF;
+
+  int crypto_i=0;
 
   /* Parse the name of the instruction.  Terminate the string if whitespace
      is found so that hash_find only sees the name part of the string.  */
@@ -1432,6 +1483,293 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      /* Successful assembly.  */
 	      error = NULL;
 	      goto out;
+
+// ----- XCrypto ISE BEGIN -----
+case 'X': /* SCARV Crypto ISE */
+  switch (c = *++args){
+    case 'w': /* b0 */
+    case 'x': /* b1 */
+    case 'y': /* b2 */
+    case 'z': /* b3 */
+        crypto_i = (s[0] - 48) & 0xf;
+        if(crypto_i >= 0 && crypto_i <= 3){
+            if(c == 'w') INSERT_OPERAND(XB0,*ip, crypto_i);
+            if(c == 'x') INSERT_OPERAND(XB1,*ip, crypto_i);
+            if(c == 'y') INSERT_OPERAND(XB2,*ip, crypto_i);
+            if(c == 'z') INSERT_OPERAND(XB3,*ip, crypto_i);
+            EAT_ARG_TOKENS;
+        } else {
+            as_bad (_("Crypto ISE: Bad twiddle source. Should be {0,1,2,3} but got '%d')\n"),crypto_i);
+            break;
+        }
+        continue;
+    case 'p': /* pack width */
+        packwidth = s[0];
+        if(s[0] == 'w'){ /* Pack word */
+            INSERT_OPERAND(XPW,*ip, 5);
+        }
+        else if(s[0] == 'h'){ /* Pack halfwords */
+            INSERT_OPERAND(XPW,*ip, 4);
+        }
+        else if(s[0] == 'b'){ /* Pack bytes */
+            INSERT_OPERAND(XPW,*ip, 3);
+        }
+        else if(s[0] == 'n'){ /* Pack nibbles */
+            INSERT_OPERAND(XPW,*ip, 2);
+        }
+        else if(s[0] == 'c'){ /* Pack crumbs */
+            INSERT_OPERAND(XPW,*ip, 1);
+        }
+        else {
+            as_bad(_("Crypto ISE: Bad pack width specifier. Should be {w,h,b,n,c}. Got %c\n"),s[0]);
+            break;
+        }
+        EAT_ARG_TOKENS;
+        continue;
+    case 'L': /* cl - Insert / Extract Length*/
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        int is_bmv = strcmp(insn -> name,"xc.bmv") == 0;
+        if(is_bmv) {
+            if ((unsigned long) imm_expr->X_add_number > 32) {
+              as_bad (_("Crypto ISE Improper bit index (%lu). Should be 0 <= x < 32."),
+              (unsigned long) imm_expr->X_add_number);
+              break;
+            }
+            INSERT_OPERAND (XCL, *ip, imm_expr->X_add_number);
+        } else {
+            // xc.ins, xc.ext
+            if ((unsigned long) imm_expr->X_add_number > 32 ||
+                (unsigned long) imm_expr->X_add_number <  1) {
+              as_bad (_("Crypto ISE Improper bitfield length %s (%lu). Should be 1 <= x <= 32."),
+              insn -> name,
+              (unsigned long) imm_expr->X_add_number);
+              break;
+            } else if ((unsigned long) imm_expr->X_add_number + crypto_i > 32) {
+              as_bad (_("Crypto ISE Improper bitfield: start+length > 32."));
+              break;
+            }
+            INSERT_OPERAND (XCL, *ip, imm_expr->X_add_number-1);
+        }
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+      break;
+    case 'r': /* cmshamt */
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        if ((unsigned long) imm_expr->X_add_number >= 64) {
+          as_bad (_("Crypto ISE Improper multi-precision shift (%lu). Should be 0 <= x < 64"),
+          (unsigned long) imm_expr->X_add_number);
+          break;
+        }
+        INSERT_OPERAND (XCMSHAMT, *ip, imm_expr->X_add_number);
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+    case 'D': /* crd */
+        if(reg_lookup(&s,RCLASS_CPR,&regno)){
+            INSERT_OPERAND(XCRD,*ip,regno);
+            EAT_ARG_TOKENS;
+            continue;
+        } else {
+            as_bad(_("Couldn't identify crypto destination register: '%s'"),s);
+            break;
+        }
+    case 'M': /* crdm */
+        /* CRDM takes a *pair* of explicitly specified adjacent registers */
+        if(!reg_lookup(&s,RCLASS_CPR,&regno)) {
+            as_bad(_("Couldn't identify crypto multi-destination register: '%s'"),str);
+        }
+
+        s++;
+
+        if(reg_lookup(&s,RCLASS_CPR,&regno2)){
+            if((regno | 0x1) == regno2 &&
+                regno != regno2) {
+                INSERT_OPERAND(XCRDM,*ip,regno>>1);
+                EAT_ARG_TOKENS;
+                continue;
+            }
+            else {
+                as_bad(_("Bad crypto multi-destination register pair: '%s'"),str);
+            }
+        } else {
+            as_bad(_("Couldn't identify crypto multi-destination register: '%s'"),str);
+            break;
+        }
+      break;
+    case 's': /* crs1 */
+        if(reg_lookup(&s,RCLASS_CPR,&regno)){
+            INSERT_OPERAND(XCRS1,*ip,regno);
+            EAT_ARG_TOKENS;
+            continue;
+        } else {
+            as_bad(_("Couldn't identify crypto source register 1: '%s'"),s);
+            break;
+        }
+    case 't': /* crs2 */
+        if(reg_lookup(&s,RCLASS_CPR,&regno)){
+            INSERT_OPERAND(XCRS2,*ip,regno);
+            EAT_ARG_TOKENS;
+            continue;
+        } else {
+            as_bad(_("Couldn't identify crypto source register 2: '%s'"),s);
+            break;
+        }
+    case 'S': /* crs3 */
+        if(reg_lookup(&s,RCLASS_CPR,&regno)){
+            INSERT_OPERAND(XCRS3,*ip,regno);
+            EAT_ARG_TOKENS;
+            continue;
+        } else {
+            as_bad(_("Couldn't identify crypto source register 3: '%s'"),s);
+            break;
+        }
+      break;
+    case 'k': /* cs - Insert / Extract start */
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        if ((unsigned long) imm_expr->X_add_number >= 32) {
+          as_bad (_("Crypto ISE Improper insert/extract start (%lu). Should be 0 <= x <= 31."),
+          (unsigned long) imm_expr->X_add_number);
+          break;
+        }
+        INSERT_OPERAND (XCS, *ip, imm_expr->X_add_number);
+        crypto_i       = imm_expr->X_add_number;
+        imm_expr->X_op = O_absent;
+        s              = expr_end;
+        continue;
+      break;
+    case 'R': /* cshamt */
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+
+        // Use only 5-bit cshamt field
+        if ((unsigned long) imm_expr->X_add_number > 31) {
+          as_bad (_("Crypto ISE Improper shift/rotate amount (%lu). "
+                    "Packwidth = '%c' implies shift/rotate amount "
+                    "0 <= x <= 31"),
+          (unsigned long) imm_expr->X_add_number,
+          packwidth);
+          break;
+        }
+        INSERT_OPERAND (XCSHAMT, *ip, imm_expr->X_add_number);
+
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+    case 'h': /* Halfword specifier */
+        if(s[0] == '0'){
+            INSERT_OPERAND(XCC, *ip, 0);
+        } else if (s[0] == '1') {
+            INSERT_OPERAND(XCC, *ip, 1);
+        } else {
+          as_bad (_("Crypto ISE Improper halfword specifieer (%c). Should be 0 (low) or 1 (high)."),
+            s[0]);
+          break;
+        }
+        EAT_ARG_TOKENS;
+        continue;
+    case 'B': /* Byte of halfword specifier for stores*/
+        if(s[0] == '0'){
+            INSERT_OPERAND(XCA, *ip, 0);
+        } else if (s[0] == '1') {
+            INSERT_OPERAND(XCA, *ip, 1);
+        } else {
+          as_bad (_("Crypto ISE Improper byte-of-halfword specifieer (%c). Should be 0 (low) or 1 (high)."),
+            s[0]);
+          break;
+        }
+        EAT_ARG_TOKENS;
+        continue;
+    case 'd': /* Byte of halfword specifier for loads */
+        if(s[0] == '0'){
+            INSERT_OPERAND(XCD, *ip, 0);
+        } else if (s[0] == '1') {
+            INSERT_OPERAND(XCD, *ip, 1);
+        } else {
+          as_bad (_("Crypto ISE Improper byte-of-halfword specifieer (%c). Should be 0 (low) or 1 (high)."),
+            s[0]);
+          break;
+        }
+        EAT_ARG_TOKENS;
+        continue;
+    case 'l': /* imm11 */
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        //if ((unsigned long) imm_expr->X_add_number > 1023) {
+        //  as_bad (_("Crypto ISE Improper 11 bit immediate offset (%lu). Should be 0 <= x <= (%i)"),
+        //  (unsigned long) imm_expr->X_add_number,1023);
+        //  break;
+        //}
+        INSERT_OPERAND (XIMM11, *ip, imm_expr->X_add_number);
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+    case 'm': /* imm11hi */
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        //if ((unsigned long) imm_expr->X_add_number > 1023) {
+        //  as_bad (_("Crypto ISE Improper 11 bit immediate offset (%lu). Should be 0 <= x <= (%i)"),
+        //  (unsigned long) imm_expr->X_add_number,1023);
+        //  break;
+        //}
+        INSERT_OPERAND (XIMM11HI, *ip, imm_expr->X_add_number>>4);
+        INSERT_OPERAND (XIMM11LO, *ip, imm_expr->X_add_number & 0xF);
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+    case 'n': /* imm11lo */
+      as_bad (_("Crypto ISE - We should never reach this line! %c"),'n');
+      break;
+    case '5': /* imm5 */
+        // 16 bit immediate split across imm11 and imm5 opcode fields.
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        if ((unsigned long) imm_expr->X_add_number > 65535) {
+          as_bad (_("Crypto ISE Improper 16 bit immediate offset (%lu). Should be 0 <= x <= (%i)"),
+          (unsigned long) imm_expr->X_add_number,65535);
+          break;
+        }
+        INSERT_OPERAND (XIMM11, *ip, (imm_expr->X_add_number>>5) & 0x7FF);
+        INSERT_OPERAND (XIMM5, *ip, imm_expr->X_add_number & 0x1f);
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+      break;
+    case '4': /* lut4 */
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        if ((unsigned long) imm_expr->X_add_number > 15) {
+          as_bad (_("Crypto ISE Improper 4-bit immediate (%lu). Should be 0 <= x <= 15"),
+          (unsigned long) imm_expr->X_add_number);
+          break;
+        }
+        INSERT_OPERAND (XLUT4, *ip, imm_expr->X_add_number);
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+    case '8': /* lut8 */
+        my_getExpression (imm_expr, s);
+        check_absolute_expr (ip, imm_expr, FALSE);
+        if ((unsigned long) imm_expr->X_add_number > 255) {
+          as_bad (_("Crypto ISE Improper 8-bit immediate (%lu). Should be 0 <= x <= 255"),
+          (unsigned long) imm_expr->X_add_number);
+          break;
+        }
+        INSERT_OPERAND (XLUT8, *ip, imm_expr->X_add_number);
+        imm_expr->X_op = O_absent;
+        s = expr_end;
+        continue;
+
+    default:
+        as_bad (_("bad Crypto ISE field specifier 'X%c'"), *args);
+        break;
+
+}
+break;
+// ----- XCrypto ISE END -------
 
 	    case 'C': /* RVC */
 	      switch (*++args)
