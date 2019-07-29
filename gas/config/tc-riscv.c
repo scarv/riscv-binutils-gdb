@@ -1386,6 +1386,10 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   int argnum;
   const struct percent_op_match *p;
   const char *error = "unrecognized opcode";
+  
+  /* Stores first register in pair for XM,XN multi-writeback pairs.
+     Only used for XCrypto. */
+  unsigned int xc_xm = 0;
 
   /* Parse the name of the instruction.  Terminate the string if whitespace
      is found so that hash_find only sees the name part of the string.  */
@@ -1459,15 +1463,20 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
             s++;
             break;
           case 'M':
-            my_getExpression (imm_expr, s);
-            check_absolute_expr (ip, imm_expr, FALSE);
-            if((unsigned long)imm_expr->X_add_number > 15) {
-                as_bad(_("XCrypto ISE: Bad register specifier. Should be {0<=x<=15}."));
+            if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+            if (!(regno & 0x1)) {
+                as_bad("XCrypto ISE: RD2 for multi-precision arithemtic must be an 'odd' register number.\n");
+            } else {
+                xc_xm = regno;
             }
-            INSERT_OPERAND(RDM, *ip, imm_expr -> X_add_number);
-            /* Increment s to move to next token. */
-            while(s[0] != ',') {s++;}
-            s++;
+            break;
+          case 'N':
+            if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+            if(regno + 1 == xc_xm) {
+                INSERT_OPERAND(RDM, *ip, regno >> 1);
+            } else {
+                as_bad("XCrypto ISE: destination registers for multi-precision arithmetic must be contiguous.\n");
+            }
             break;
           default:
             as_bad(_("XCrypto ISE: Unknown argument specifier: %c\n"),*args);
