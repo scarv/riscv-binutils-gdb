@@ -570,6 +570,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case 'X': /* XCrypto */
     switch (c = *p++) {
       case 'p': USE_BITS (OP_MASK_PW, OP_SH_PW)  ; break;
+      case 's': USE_BITS (OP_MASK_PS, OP_SH_PS)  ; break;
       case 'M': USE_BITS (OP_MASK_RDM, OP_SH_RDM); break;
       }
       break;
@@ -1445,44 +1446,59 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 
         case 'X': /* XCrypto */
           switch (*++args) 
-        {
-          case 'p': /* XCrypto - pack width */
-            if(s[0] == 'h') {   /* Pack width: halfwords */
-                INSERT_OPERAND(PW, *ip, 3);
-            } else if(s[0] == 'b') {    /* Pack width: bytes */
-                INSERT_OPERAND(PW, *ip, 2);
-            } else if(s[0] == 'n') {    /* Pack width: nibbles */
-                INSERT_OPERAND(PW, *ip, 1);
-            } else if(s[0] == 'c') {    /* Pack width: crumbs */
-                INSERT_OPERAND(PW, *ip, 0);
-            } else {
-                as_bad(_("XCrypto ISE: Bad pack width specifier. Should be {h,b,n,c}. Got %c\n"),s[0]);
-            }
-            /* Increment s to move to next token. */
-            while(s[0] != ',') {s++;}
-            s++;
-            break;
-          case 'M':
-            if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
-            if (!(regno & 0x1)) {
-                as_bad("XCrypto ISE: RD2 for multi-precision arithemtic must be an 'odd' register number.\n");
-            } else {
-                xc_xm = regno;
-            }
-            break;
-          case 'N':
-            if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
-            if(regno + 1 == xc_xm) {
-                INSERT_OPERAND(RDM, *ip, regno >> 1);
-            } else {
-                as_bad("XCrypto ISE: destination registers for multi-precision arithmetic must be contiguous.\n");
-            }
-            break;
-          default:
-            as_bad(_("XCrypto ISE: Unknown argument specifier: %c\n"),*args);
-            break;
-        }
-          continue;
+          {
+            case 'p': /* XCrypto - pack width */
+              if(s[0] == 'h') {   /* Pack width: halfwords */
+                  INSERT_OPERAND(PW, *ip, 3);
+              } else if(s[0] == 'b') {    /* Pack width: bytes */
+                  INSERT_OPERAND(PW, *ip, 2);
+              } else if(s[0] == 'n') {    /* Pack width: nibbles */
+                  INSERT_OPERAND(PW, *ip, 1);
+              } else if(s[0] == 'c') {    /* Pack width: crumbs */
+                  INSERT_OPERAND(PW, *ip, 0);
+              } else {
+                  as_bad(_("XCrypto ISE: Bad pack width specifier. Should be {h,b,n,c}. Got %c\n"),s[0]);
+                  break;
+              }
+              s ++;
+              continue;
+            case 's': /* SHA3 shift amounts 0..3*/
+		      my_getExpression (imm_expr, s);
+              if(imm_expr->X_add_number > 3 || imm_expr->X_add_number < 0) {
+                  as_bad("XCrypto ISE: SHA3 shift amount should be >0 and <3. Got %d.\n", imm_expr->X_add_number);
+                  break;
+              }
+              INSERT_OPERAND(PS, *ip, (imm_expr -> X_add_number & 0x3));
+              imm_expr -> X_op = O_absent;
+              s = expr_end;
+               continue;
+            case 'M': 
+              /* 2'nd destination register for MP instructions. Appears first in
+                 the argument list. */
+              if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+              if (!(regno & 0x1)) {
+                  as_bad("XCrypto ISE: RD2 for multi-precision arithemtic must be an 'odd' register number.\n");
+                  break;
+              } else {
+                  xc_xm = regno;
+              }
+              continue;
+            case 'N':
+              /* 1'st destination register for MP instructions. Appears second in
+                 the argument list. */
+              if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+              if(regno + 1 == xc_xm) {
+                  INSERT_OPERAND(RDM, *ip, regno >> 1);
+              } else {
+                  as_bad("XCrypto ISE: destination registers for multi-precision arithmetic must be contiguous.\n");
+              }
+              continue;
+            default:
+              as_bad(_("XCrypto ISE: Unknown argument specifier: %c\n"),*args);
+              break;
+          } /* END XCrypto */
+          break; /* case 'X': (XCrypto) */
+
 	    case 'C': /* RVC */
 	      switch (*++args)
 		{

@@ -118,6 +118,7 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
   struct riscv_private_data *pd = info->private_data;
   int rs1 = (l >> OP_SH_RS1) & OP_MASK_RS1;
   int rd = (l >> OP_SH_RD) & OP_MASK_RD;
+  char p;
   fprintf_ftype print = info->fprintf_func;
 
   if (*d != '\0')
@@ -127,6 +128,30 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
     {
       switch (*d)
 	{
+    case 'X': /* XCrypto */
+      switch (*++d) 
+      {
+        case 'p': /* XCrypto - pack width */
+          p = EXTRACT_OPERAND (PW, l);
+          switch(p) {
+            case 0: print (info->stream, "c"); break;
+            case 1: print (info->stream, "n"); break;
+            case 2: print (info->stream, "b"); break;
+            case 3: print (info->stream, "h"); break;
+            default: break;
+          }
+          break;
+        case 's': /* SHA3 shift amounts 0..3*/
+           print(info -> stream, "%d", EXTRACT_OPERAND(PS,l));
+           break;
+        case 'M': 
+          print(info -> stream, "(%d,", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x1]);
+          break;
+        case 'N':
+          print(info -> stream, "%d)", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x0]);
+          break;
+      } /* END XCrypto */
+    break; /* case 'X': (XCrypto) */
 	case 'C': /* RVC */
 	  switch (*++d)
 	    {

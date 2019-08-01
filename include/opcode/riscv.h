@@ -239,8 +239,10 @@ static const char * const riscv_pred_succ[16] =
 
 #define OP_MASK_RDM     0xF
 #define OP_SH_RDM       8
-#define OP_MASK_PW      0x3
+#define OP_MASK_PW      0b11
 #define OP_SH_PW        30
+#define OP_MASK_PS      0b11
+#define OP_SH_PS        30
 
 /* RVC fields.  */
 
