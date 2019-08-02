@@ -145,10 +145,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
            print(info -> stream, "%d", EXTRACT_OPERAND(PS,l));
            break;
         case 'M': 
-          print(info -> stream, "(%d,", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x1]);
+          print(info -> stream, "(%s,", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x1]);
           break;
         case 'N':
-          print(info -> stream, "%d)", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x0]);
+          print(info -> stream, "%s)", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x0]);
           break;
       } /* END XCrypto */
     break; /* case 'X': (XCrypto) */
