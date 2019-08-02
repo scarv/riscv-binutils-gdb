@@ -1465,7 +1465,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
             case 's': /* SHA3 shift amounts 0..3*/
 		      my_getExpression (imm_expr, s);
               if(imm_expr->X_add_number > 3 || imm_expr->X_add_number < 0) {
-                  as_bad("XCrypto ISE: SHA3 shift amount should be >0 and <3. Got %d.\n", imm_expr->X_add_number);
+                  as_bad("XCrypto ISE: SHA3 shift amount should be >0 and <3. Got %ld.\n", imm_expr->X_add_number);
                   break;
               }
               INSERT_OPERAND(PS, *ip, (imm_expr -> X_add_number & 0x3));
