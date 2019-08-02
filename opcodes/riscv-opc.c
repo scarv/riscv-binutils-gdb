@@ -794,6 +794,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {        "xc.macc.1", 0, {"I",0}, "(XM,XN),s,t,r", MATCH_XC_MACC_1, MASK_XC_MACC_1, match_opcode, 0},
 {        "xc.madd.3", 0, {"I",0}, "(XM,XN),s,t,r", MATCH_XC_MADD_3, MASK_XC_MADD_3, match_opcode, 0},
 {        "xc.msub.3", 0, {"I",0}, "(XM,XN),s,t,r", MATCH_XC_MSUB_3, MASK_XC_MSUB_3, match_opcode, 0},
+{          "xc.mror", 0, {"I",0}, "(XM,XN),s,t,r", MATCH_XC_MROR, MASK_XC_MROR, match_opcode, 0},
 {       "xc.rngtest", 0, {"I",0},        "d", MATCH_XC_RNGTEST, MASK_XC_RNGTEST, match_opcode, 0},
 {       "xc.rngsamp", 0, {"I",0},        "d", MATCH_XC_RNGSAMP, MASK_XC_RNGSAMP, match_opcode, 0},
 {       "xc.rngseed", 0, {"I",0},        "s", MATCH_XC_RNGSEED, MASK_XC_RNGSEED, match_opcode, 0},
