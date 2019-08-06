@@ -142,7 +142,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
           }
           break;
         case 's': /* SHA3 shift amounts 0..3*/
-           print(info -> stream, "%d", EXTRACT_OPERAND(PS,l));
+           print(info -> stream, "%lu", EXTRACT_OPERAND(PS,l));
+           break;
+        case 'l': 
+           print(info -> stream, "%lu", EXTRACT_OPERAND(L,l));
            break;
         case 'M': 
           print(info -> stream, "(%s,", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x1]);

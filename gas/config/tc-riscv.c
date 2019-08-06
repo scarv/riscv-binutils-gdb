@@ -572,6 +572,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case 'p': USE_BITS (OP_MASK_PW, OP_SH_PW)  ; break;
       case 's': USE_BITS (OP_MASK_PS, OP_SH_PS)  ; break;
       case 'M': USE_BITS (OP_MASK_RDM, OP_SH_RDM); break;
+      case 'l': USE_BITS (OP_MASK_L  , OP_SH_L  ); break;
       }
       break;
       case 'C': /* RVC */
@@ -1469,6 +1470,16 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
                   break;
               }
               INSERT_OPERAND(PS, *ip, (imm_expr -> X_add_number & 0x3));
+              imm_expr -> X_op = O_absent;
+              s = expr_end;
+               continue;
+            case 'l': /* xc.bop lut select*/
+		      my_getExpression (imm_expr, s);
+              if(imm_expr->X_add_number > 1 || imm_expr->X_add_number < 0) {
+                  as_bad("XCrypto ISE: xc.bop lut select should be >0 and <2. Got %ld.\n", imm_expr->X_add_number);
+                  break;
+              }
+              INSERT_OPERAND(L, *ip, (imm_expr -> X_add_number & 0x1));
               imm_expr -> X_op = O_absent;
               s = expr_end;
                continue;
