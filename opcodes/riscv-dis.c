@@ -153,6 +153,18 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
         case 'N':
           print(info -> stream, "%s)", riscv_gpr_names[(EXTRACT_OPERAND(RDM,l) << 1)|0x0]);
           break;
+        case 'O': 
+          print(info -> stream, "(%s,", riscv_gpr_names[(EXTRACT_OPERAND(RSM1,l) << 1)|0x1]);
+          break;
+        case 'P':
+          print(info -> stream, "%s)", riscv_gpr_names[(EXTRACT_OPERAND(RSM1,l) << 1)|0x0]);
+          break;
+        case 'Q': 
+          print(info -> stream, "(%s,", riscv_gpr_names[(EXTRACT_OPERAND(RSM2,l) << 1)|0x1]);
+          break;
+        case 'R':
+          print(info -> stream, "%s)", riscv_gpr_names[(EXTRACT_OPERAND(RSM2,l) << 1)|0x0]);
+          break;
       } /* END XCrypto */
     break; /* case 'X': (XCrypto) */
 	case 'C': /* RVC */

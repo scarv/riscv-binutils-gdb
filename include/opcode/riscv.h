@@ -237,6 +237,14 @@ static const char * const riscv_pred_succ[16] =
 
 /* XCrypto fields. */
 
+// Pair source register 1
+#define OP_MASK_RSM1    0xF
+#define OP_SH_RSM1      16
+
+// Pair source register 2
+#define OP_MASK_RSM2    0xF
+#define OP_SH_RSM2      21
+
 #define OP_MASK_RDM     0xF
 #define OP_SH_RDM       8
 #define OP_MASK_PW      0b11

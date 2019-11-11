@@ -572,6 +572,8 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
       case 'p': USE_BITS (OP_MASK_PW, OP_SH_PW)  ; break;
       case 's': USE_BITS (OP_MASK_PS, OP_SH_PS)  ; break;
       case 'M': USE_BITS (OP_MASK_RDM, OP_SH_RDM); break;
+      case 'O': USE_BITS (OP_MASK_RSM1, OP_SH_RSM1); break;
+      case 'Q': USE_BITS (OP_MASK_RSM2, OP_SH_RSM2); break;
       case 'l': USE_BITS (OP_MASK_L  , OP_SH_L  ); break;
       }
       break;
@@ -1484,24 +1486,60 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
               s = expr_end;
                continue;
             case 'M': 
-              /* 2'nd destination register for MP instructions. Appears first in
-                 the argument list. */
+              /* 2'nd destination register for MP instructions. Appears first in the argument list. */
               if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
               if (!(regno & 0x1)) {
-                  as_bad("XCrypto ISE: RD2 for multi-precision arithemtic must be an 'odd' register number.\n");
+                  as_bad("XCrypto ISE: Hi register for multi-destination address must be an 'odd' register number. Got %d.\n",regno);
                   break;
               } else {
                   xc_xm = regno;
               }
               continue;
             case 'N':
-              /* 1'st destination register for MP instructions. Appears second in
-                 the argument list. */
+              /* 1'st destination register for MP instructions. Appears second in the argument list. */
               if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
               if(regno + 1 == xc_xm) {
                   INSERT_OPERAND(RDM, *ip, regno >> 1);
               } else {
-                  as_bad("XCrypto ISE: destination registers for multi-precision arithmetic must be contiguous.\n");
+                  as_bad("XCrypto ISE: destination registers for multi-destination address must be contiguous. Got (%d,%d).\n",xc_xm,regno);
+              }
+              continue;
+            case 'O': 
+              /* 2'nd source register for RSM1 instructions. Appears first in the argument list. */
+              if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+              if (!(regno & 0x1)) {
+                  as_bad("XCrypto ISE: Hi register for multi-source address must be an 'odd' register number. Got %d.\n",regno);
+                  break;
+              } else {
+                  xc_xm = regno;
+              }
+              continue;
+            case 'P':
+              /* 1'st destination register for RSM1 instructions. Appears second in the argument list. */
+              if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+              if(regno + 1 == xc_xm) {
+                  INSERT_OPERAND(RSM1, *ip, regno >> 1);
+              } else {
+                  as_bad("XCrypto ISE: destination registers for multi-destination address must be contiguous. Got (%d,%d).\n",xc_xm,regno);
+              }
+              continue;
+            case 'Q': 
+              /* 2'nd source register for RSM2 instructions. Appears first in the argument list. */
+              if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+              if (!(regno & 0x1)) {
+                  as_bad("XCrypto ISE: Hi register for multi-source address must be an 'odd' register number. Got %d.\n",regno);
+                  break;
+              } else {
+                  xc_xm = regno;
+              }
+              continue;
+            case 'R':
+              /* 1'st destination register for RSM2 instructions. Appears second in the argument list. */
+              if (!reg_lookup (&s, RCLASS_GPR, &regno)) break;
+              if(regno + 1 == xc_xm) {
+                  INSERT_OPERAND(RSM2, *ip, regno >> 1);
+              } else {
+                  as_bad("XCrypto ISE: destination registers for multi-destination address must be contiguous. Got (%d,%d).\n",xc_xm,regno);
               }
               continue;
             default:
